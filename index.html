@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upstox Pro - Live Stock Market & Investment Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { background-color: #f8f9fa; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #1a1a1a; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="pb-24">
+
+    <!-- Top Demat Connect Banner -->
+    <div id="demat-banner" class="bg-purple-900 text-white px-4 py-2.5 flex items-center justify-between text-xs sm:text-sm">
+        <div class="flex items-center space-x-2">
+            <i class="fa-solid fa-shield-halved text-purple-300"></i>
+            <span class="font-medium">Complete KYC & Link Demat to unlock F&O and Intraday live trading</span>
+        </div>
+        <button onclick="openDematModal()" class="bg-white text-purple-900 px-3 py-1 rounded font-bold hover:bg-purple-100 transition shadow-sm">Connect Now</button>
+    </div>
+
+    <!-- Indices Ticker Bar -->
+    <div class="bg-white border-b border-gray-200 px-4 py-2 flex space-x-6 overflow-x-auto hide-scrollbar text-xs shadow-xs">
+        <div class="flex items-center space-x-2 shrink-0">
+            <span class="font-semibold text-gray-500">SENSEX</span>
+            <span id="ticker-sensex" class="font-bold">74,314.59</span>
+            <span class="text-red-600 font-medium">-21.86 (-0.03%)</span>
+        </div>
+        <div class="flex items-center space-x-2 shrink-0 border-l pl-4 border-gray-200">
+            <span class="font-semibold text-gray-500">NIFTY 50</span>
+            <span id="ticker-nifty" class="font-bold">23,270.60</span>
+            <span class="text-green-600 font-medium">+53.00 (+0.23%)</span>
+        </div>
+        <div class="flex items-center space-x-2 shrink-0 border-l pl-4 border-gray-200">
+            <span class="font-semibold text-gray-500">BANKNIFTY</span>
+            <span id="ticker-banknifty" class="font-bold">56,055.75</span>
+            <span class="text-green-600 font-medium">+120.40 (+0.21%)</span>
+        </div>
+    </div>
+
+    <!-- Main Navigation Header -->
+    <header class="bg-white sticky top-0 z-40 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-purple-700 text-white font-extrabold px-3 py-1.5 rounded-lg text-lg tracking-wider flex items-center shadow-sm">
+                    up<span class="text-xs ml-0.5 text-purple-300">✓</span>
+                </div>
+            </div>
+            <!-- Search Bar -->
+            <div class="flex-1 max-w-xl mx-4">
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400"><i class="fa-solid fa-search"></i></span>
+                    <input type="text" id="global-search" oninput="handleSearch(this.value)" placeholder="Search F&O, Stocks, Mutual Funds, IPOs..." class="w-full bg-gray-50 border border-gray-200 rounded-full py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-purple-600 focus:bg-white transition">
+                </div>
+            </div>
+            <!-- Wallet Profile -->
+            <div class="flex items-center space-x-3">
+                <button onclick="openWalletModal()" class="border border-gray-300 rounded-full py-1.5 px-3 flex items-center space-x-2 text-gray-700 hover:bg-gray-50 transition">
+                    <i class="fa-solid fa-wallet text-purple-700"></i>
+                    <span id="wallet-badge" class="text-xs font-bold text-gray-800">₹10,000</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Category Horizontal Tabs -->
+        <div class="flex space-x-6 px-4 border-t border-gray-100 overflow-x-auto hide-scrollbar text-sm font-medium text-gray-600">
+            <button onclick="switchTab('chart')" id="tab-btn-chart" class="py-3 border-b-2 border-purple-700 text-purple-700 font-semibold whitespace-nowrap"><i class="fa-solid fa-chart-candlestick mr-1"></i> Live Chart & Pro</button>
+            <button onclick="switchTab('stocks')" id="tab-btn-stocks" class="py-3 border-b-2 border-transparent hover:text-purple-700 whitespace-nowrap">Stocks (28+)</button>
+            <button onclick="switchTab('ideas')" id="tab-btn-ideas" class="py-3 border-b-2 border-transparent hover:text-purple-700 whitespace-nowrap">Ideas & Gold</button>
+            <button onclick="switchTab('options')" id="tab-btn-options" class="py-3 border-b-2 border-transparent hover:text-purple-700 whitespace-nowrap">Options Chain</button>
+            <button onclick="switchTab('mf')" id="tab-btn-mf" class="py-3 border-b-2 border-transparent hover:text-purple-700 whitespace-nowrap">MF & SIP</button>
+            <button onclick="switchTab('ipo')" id="tab-btn-ipo" class="py-3 border-b-2 border-transparent hover:text-purple-700 whitespace-nowrap text-red-600 font-semibold">IPOs <span class="bg-red-100 text-red-600 text-[9px] px-1 rounded">HOT</span></button>
+            <button onclick="switchTab('futures')" id="tab-btn-futures" class="py-3 border-b-2 border-transparent hover:text-purple-700 whitespace-nowrap">Futures</button>
+            <button onclick="switchTab('commodities')" id="tab-btn-commodities" class="py-3 border-b-2 border-transparent hover:text-purple-700 whitespace-nowrap">MCX Commodities</button>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-7xl mx-auto px-4 py-6">
+
+        <!-- 0. LIVE BROKER CHART SECTION (TradingView Style) -->
+        <div id="section-chart" class="space-y-4">
+            <div class="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm">
+                <!-- Stock Header Bar Inside Chart -->
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-4 border-b border-gray-100 gap-3">
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <h2 id="active-chart-title" class="text-xl font-extrabold text-gray-900">RELIANCE</h2>
+                            <span class="bg-purple-100 text-purple-700 text-xs px-2 py-0.5 rounded font-semibold">NSE</span>
+                        </div>
+                        <p class="text-xs text-gray-500">Live Tick Data • Real-time broker feed</p>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="text-right">
+                            <p id="active-chart-price" class="text-xl font-extrabold text-gray-900">₹2,840.50</p>
+                            <p id="active-chart-change" class="text-xs font-bold text-green-600">+1.45 (+1.45%)</p>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="openTradeModalFromChart('BUY')" class="bg-green-600 text-white px-5 py-2 rounded-xl font-bold text-xs hover:bg-green-700 transition shadow-sm">BUY</button>
+                            <button onclick="openTradeModalFromChart('SELL')" class="bg-red-600 text-white px-5 py-2 rounded-xl font-bold text-xs hover:bg-red-700 transition shadow-sm">SELL</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Timeframe selector -->
+                <div class="flex justify-between items-center pt-3 pb-2 text-xs font-semibold text-gray-600">
+                    <div class="flex space-x-2">
+                        <button onclick="updateChartTimeframe('1D')" class="px-2.5 py-1 bg-purple-50 text-purple-700 rounded border border-purple-200">1D</button>
+                        <button onclick="updateChartTimeframe('1W')" class="px-2.5 py-1 hover:bg-gray-100 rounded">1W</button>
+                        <button onclick="updateChartTimeframe('1M')" class="px-2.5 py-1 hover:bg-gray-100 rounded">1M</button>
+                        <button onclick="updateChartTimeframe('1Y')" class="px-2.5 py-1 hover:bg-gray-100 rounded">1Y</button>
+                    </div>
+                    <div class="text-gray-400">Indicators: <span class="text-purple-700 font-bold">EMA, RSI, MACD</span></div>
+                </div>
+
+                <!-- Chart Canvas Container -->
+                <div class="relative h-[350px] w-full mt-2">
+                    <canvas id="brokerChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 1. STOCKS TAB -->
+        <div id="section-stocks" class="hidden space-y-4">
+            <div class="flex space-x-2 overflow-x-auto hide-scrollbar pb-2">
+                <button onclick="filterStocks('all')" class="bg-purple-700 text-white px-4 py-1.5 rounded-full text-xs font-medium shrink-0">All Stocks (28)</button>
+                <button onclick="filterStocks('gainers')" class="bg-white border border-gray-200 text-gray-700 px-4 py-1.5 rounded-full text-xs font-medium shrink-0 hover:bg-gray-50">Top Gainers</button>
+                <button onclick="filterStocks('losers')" class="bg-white border border-gray-200 text-gray-700 px-4 py-1.5 rounded-full text-xs font-medium shrink-0 hover:bg-gray-50">Top Losers</button>
+            </div>
+            <div id="stocks-list" class="bg-white rounded-2xl shadow-sm border border-gray-200 divide-y divide-gray-100"></div>
+        </div>
+
+        <!-- 2. IDEAS TAB -->
+        <div id="section-ideas" class="hidden space-y-6">
+            <div class="bg-gradient-to-r from-amber-500 to-yellow-600 rounded-2xl p-6 text-white shadow-md">
+                <h3 class="text-lg font-bold mb-1">Start small. Start with gold at just ₹15</h3>
+                <p class="text-xs text-yellow-100 mb-4">Pure 24K Gold delivered securely to your vault. Safest long-term hedge.</p>
+                <button onclick="openTradeModal('Gold 24K', 7455.50)" class="bg-white text-yellow-800 px-4 py-2 rounded-xl font-bold text-xs shadow hover:bg-yellow-50 transition">Buy Gold at ₹15</button>
+            </div>
+            <div class="bg-white rounded-2xl p-4 border border-gray-200">
+                <h4 class="font-bold text-gray-800 mb-3 text-sm"><i class="fa-solid fa-bolt text-purple-600 mr-2"></i>Curated Investment Ideas</h4>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="ideas-grid"></div>
+            </div>
+        </div>
+
+        <!-- 3. OPTIONS TAB -->
+        <div id="section-options" class="hidden space-y-4">
+            <div class="bg-white rounded-2xl p-4 border border-gray-200">
+                <h3 class="font-bold text-gray-800 mb-3">Option Chain & Derivatives (F&O)</h3>
+                <div class="grid grid-cols-3 gap-2 mb-4">
+                    <button onclick="loadOptionChain('NIFTY')" class="p-3 bg-purple-50 text-purple-700 font-semibold rounded-xl text-center text-xs border border-purple-200">NIFTY 50</button>
+                    <button onclick="loadOptionChain('BANKNIFTY')" class="p-3 bg-purple-50 text-purple-700 font-semibold rounded-xl text-center text-xs border border-purple-200">BANKNIFTY</button>
+                    <button onclick="loadOptionChain('SENSEX')" class="p-3 bg-purple-50 text-purple-700 font-semibold rounded-xl text-center text-xs border border-purple-200">SENSEX</button>
+                </div>
+                <div class="space-y-2" id="options-list"></div>
+            </div>
+        </div>
+
+        <!-- 4. MUTUAL FUNDS & SIP TAB -->
+        <div id="section-mf" class="hidden space-y-6">
+            <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+                <h3 class="font-bold text-gray-800 mb-4 flex items-center"><i class="fa-solid fa-calculator text-purple-600 mr-2"></i>SIP Wealth Calculator</h3>
+                <div class="space-y-4">
+                    <div>
+                        <div class="flex justify-between text-xs font-semibold mb-1">
+                            <span class="text-gray-600">Monthly Investment</span>
+                            <span id="sip-amt-val" class="text-purple-700">₹5,000</span>
+                        </div>
+                        <input type="range" id="sip-amt" min="500" max="50000" step="500" value="5000" oninput="calculateSIP()" class="w-full accent-purple-700">
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs font-semibold mb-1">
+                            <span class="text-gray-600">Expected Return Rate (p.a.)</span>
+                            <span id="sip-rate-val" class="text-purple-700">15%</span>
+                        </div>
+                        <input type="range" id="sip-rate" min="5" max="30" step="1" value="15" oninput="calculateSIP()" class="w-full accent-purple-700">
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs font-semibold mb-1">
+                            <span class="text-gray-600">Time Period</span>
+                            <span id="sip-time-val" class="text-purple-700">10 Years</span>
+                        </div>
+                        <input type="range" id="sip-time" min="1" max="30" step="1" value="10" oninput="calculateSIP()" class="w-full accent-purple-700">
+                    </div>
+                    <div class="bg-purple-50 p-4 rounded-xl flex justify-between items-center">
+                        <div>
+                            <p class="text-xs text-gray-500">Total Invested: <span id="res-invested" class="font-bold text-gray-800">₹6,00,000</span></p>
+                            <p class="text-xs text-gray-500 mt-1">Est. Returns: <span id="res-returns" class="font-bold text-green-600">₹7,92,195</span></p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs text-gray-500">Total Value</p>
+                            <p id="res-total" class="text-lg font-extrabold text-purple-700">₹13,92,195</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-2xl p-4 border border-gray-200">
+                <h4 class="font-bold text-gray-800 mb-3 text-sm">Top Rated Mutual Funds & SIPs</h4>
+                <div class="space-y-3" id="mf-list"></div>
+            </div>
+        </div>
+
+        <!-- 5. IPO TAB -->
+        <div id="section-ipo" class="hidden space-y-4">
+            <div class="bg-white rounded-2xl p-4 border border-gray-200">
+                <h3 class="font-bold text-gray-800 mb-3 flex items-center"><span class="bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded mr-2">LIVE</span>Active & Upcoming IPO Listings</h3>
+                <div class="space-y-3" id="ipo-list"></div>
+            </div>
+        </div>
+
+        <!-- 6. FUTURES & COMMODITIES -->
+        <div id="section-futures" class="hidden space-y-4">
+            <div class="bg-white rounded-2xl p-4 border border-gray-200">
+                <h3 class="font-bold text-gray-800 mb-3">Future Contracts & Chains</h3>
+                <div class="space-y-3" id="futures-list"></div>
+            </div>
+        </div>
+
+        <div id="section-commodities" class="hidden space-y-4">
+            <div class="bg-white rounded-2xl p-4 border border-gray-200">
+                <h3 class="font-bold text-gray-800 mb-3">Commodities Market (MCX)</h3>
+                <div class="space-y-3" id="commodities-list"></div>
+            </div>
+        </div>
+
+        <!-- TRUSTED BROKER BADGES SECTION (Added) -->
+        <div class="mt-8 bg-white border border-gray-200 rounded-2xl p-5 shadow-xs grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+            <div class="flex flex-col items-center justify-center p-3 bg-gray-50 rounded-xl">
+                <i class="fa-solid fa-shield-halved text-purple-700 text-lg mb-1"></i>
+                <span class="text-xs font-bold text-gray-800">SEBI Registered Broker</span>
+                <span class="text-[10px] text-gray-500">INZ000031633 | NSE, BSE & MCX</span>
+            </div>
+            <div class="flex flex-col items-center justify-center p-3 bg-gray-50 rounded-xl">
+                <i class="fa-solid fa-lock text-green-600 text-lg mb-1"></i>
+                <span class="text-xs font-bold text-gray-800">256-Bit SSL Secure</span>
+                <span class="text-[10px] text-gray-500">Bank-grade data encryption</span>
+            </div>
+            <div class="flex flex-col items-center justify-center p-3 bg-gray-50 rounded-xl">
+                <i class="fa-solid fa-bolt text-yellow-500 text-lg mb-1"></i>
+                <span class="text-xs font-bold text-gray-800">Instant UPI & Netbanking</span>
+                <span class="text-[10px] text-gray-500">HDFC, SBI, ICICI, Axis, Kotak</span>
+            </div>
+        </div>
+
+        <!-- PROFESSIONAL LEGAL DISCLAIMER FOOTER (Added) -->
+        <footer class="mt-8 text-center text-xs text-gray-400 space-y-2 pb-6 border-t border-gray-200 pt-6">
+            <p>Investments in securities market are subject to market risks, read all the related documents carefully before investing.</p>
+            <p>© 2026 Upstox Securities Pvt. Ltd. All rights reserved. Registered Office: 303, Swastik Chambers, Chembur, Mumbai.</p>
+        </footer>
+
+    </main>
+
+    <!-- Bottom App Bar -->
+    <nav class="fixed bottom-0 inset-x-0 bg-white border-t border-gray-200 py-2 px-6 flex justify-between items-center z-40 text-xs text-gray-500 shadow-lg">
+        <button onclick="switchTab('chart')" class="flex flex-col items-center text-purple-700 font-semibold"><i class="fa-solid fa-chart-line text-base mb-0.5"></i>Chart & Live</button>
+        <button onclick="switchTab('stocks')" class="flex flex-col items-center hover:text-purple-700"><i class="fa-solid fa-list text-base mb-0.5"></i>Watchlist</button>
+        <button onclick="switchTab('options')" class="flex flex-col items-center hover:text-purple-700"><i class="fa-solid fa-bolt text-base mb-0.5"></i>F&O</button>
+        <button onclick="openWalletModal()" class="flex flex-col items-center hover:text-purple-700"><i class="fa-solid fa-briefcase text-base mb-0.5"></i>Portfolio</button>
+    </nav>
+
+    <!-- MODAL: DEMAT ONBOARDING -->
+    <div id="demat-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 relative shadow-2xl">
+            <button onclick="closeDematModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            <h3 class="text-lg font-bold text-gray-800">Open Demat Account</h3>
+            <p class="text-xs text-gray-500">Enter mobile number to receive OTP and verify instantly.</p>
+            
+            <div id="demat-step-1" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Mobile Number</label>
+                    <input type="text" id="demat-phone" placeholder="9876543210" class="w-full border rounded-xl p-2.5 text-sm focus:outline-none focus:border-purple-600">
+                </div>
+                <button onclick="sendDematOtp()" class="w-full bg-purple-700 text-white py-2.5 rounded-xl font-bold text-sm hover:bg-purple-800 transition">Get OTP</button>
+            </div>
+
+            <div id="demat-step-2" class="space-y-3 hidden">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Enter 6-digit OTP (Use: 123456)</label>
+                    <input type="text" id="demat-otp-input" placeholder="123456" class="w-full border rounded-xl p-2.5 text-sm focus:outline-none focus:border-purple-600">
+                </div>
+                <button onclick="verifyDematOtp()" class="w-full bg-green-600 text-white py-2.5 rounded-xl font-bold text-sm hover:bg-green-700 transition">Verify & Activate</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: TRADE / BUY & SELL -->
+    <div id="trade-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 relative shadow-2xl">
+            <button onclick="closeTradeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            <div class="flex justify-between items-center">
+                <h3 id="trade-title" class="text-lg font-bold text-gray-800">RELIANCE</h3>
+                <span id="trade-price" class="font-bold text-purple-700">₹2,840.50</span>
+            </div>
+            <div class="flex space-x-2">
+                <button onclick="setOrderType('CNC')" id="btn-cnc" class="flex-1 py-2 rounded-xl text-xs font-bold bg-purple-700 text-white">Delivery (CNC)</button>
+                <button onclick="setOrderType('MIS')" id="btn-mis" class="flex-1 py-2 rounded-xl text-xs font-bold bg-gray-100 text-gray-700">Intraday (MIS 5x)</button>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1">Quantity</label>
+                <input type="number" id="trade-qty" value="1" min="1" oninput="calculateMargin()" class="w-full border rounded-xl p-2.5 text-sm focus:outline-none focus:border-purple-600">
+            </div>
+            <div class="bg-gray-50 p-3 rounded-xl flex justify-between text-xs">
+                <span class="text-gray-500">Required Margin:</span>
+                <span id="trade-margin" class="font-bold text-gray-800">₹2,840.50</span>
+            </div>
+            <button id="trade-action-btn" onclick="executeTrade()" class="w-full bg-green-600 text-white py-3 rounded-xl font-bold text-sm hover:bg-green-700 transition">Place Buy Order</button>
+        </div>
+    </div>
+
+    <!-- MODAL: WALLET -->
+    <div id="wallet-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 relative shadow-2xl">
+            <button onclick="closeWalletModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            <h3 class="text-lg font-bold text-gray-800">Funds & Wallet</h3>
+            <div class="bg-purple-50 p-4 rounded-xl">
+                <p class="text-xs text-gray-500">Available Balance</p>
+                <p id="wallet-balance-display" class="text-2xl font-extrabold text-purple-700">₹10,000.00</p>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1">Add Funds (₹)</label>
+                <input type="number" id="add-fund-amt" value="5000" class="w-full border rounded-xl p-2.5 text-sm focus:outline-none focus:border-purple-600">
+            </div>
+            <!-- Added Gateway Trust Note Inside Wallet -->
+            <div class="text-[11px] text-gray-400 flex items-center justify-center space-x-1">
+                <i class="fa-solid fa-lock text-green-600"></i>
+                <span>Secured via UPI, NetBanking (HDFC, SBI, ICICI, Axis)</span>
+            </div>
+            <button onclick="addFunds()" class="w-full bg-purple-700 text-white py-2.5 rounded-xl font-bold text-sm hover:bg-purple-800 transition">Proceed to Add Money</button>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT & LIVE CHART ENGINE -->
+    <script>
+        let walletBalance = 10000;
+        let currentStock = { name: 'RELIANCE', price: 2840.50, change: '+1.45%' };
+        let orderType = 'CNC';
+        let tradeAction = 'BUY';
+        let brokerChartInstance = null;
+
+        const stocksData = [
+            { name: 'TEGA', desc: 'NSE • Industrial', price: 1920.00, change: '+11.82%', positive: true },
+            { name: 'HBLENGINE', desc: 'NSE • Capital Goods', price: 756.75, change: '+7.39%', positive: true },
+            { name: 'SYRMA', desc: 'NSE • Technology', price: 1617.70, change: '+7.05%', positive: true },
+            { name: 'NIACL', desc: 'NSE • Insurance', price: 197.05, change: '+6.98%', positive: true },
+            { name: 'RELIANCE', desc: 'NSE • Conglomerate', price: 2840.50, change: '+1.45%', positive: true },
+            { name: 'TCS', desc: 'NSE • IT Services', price: 3910.20, change: '-0.85%', positive: false },
+            { name: 'INFY', desc: 'NSE • IT Services', price: 1850.40, change: '+2.10%', positive: true },
+            { name: 'HDFCBANK', desc: 'NSE • Banking', price: 1725.30, change: '+0.65%', positive: true },
+            { name: 'ICICIBANK', desc: 'NSE • Banking', price: 1240.80, change: '+1.15%', positive: true },
+            { name: 'SBIN', desc: 'NSE • Banking', price: 820.50, change: '-0.45%', positive: false },
+            { name: 'TATAMOTORS', desc: 'NSE • Auto', price: 1045.20, change: '+3.20%', positive: true },
+            { name: 'ZOMATO', desc: 'NSE • Internet', price: 265.80, change: '+5.60%', positive: true }
+        ];
+
+        const mfList = [
+            { name: 'Edelweiss Nifty 50 Index Fund', return: '+18.78%', type: 'Index Fund', nav: 112.50 },
+            { name: 'SBI Small Cap Fund', return: '+24.50%', type: 'Small Cap', nav: 210.40 },
+            { name: 'Quant Active Fund', return: '+26.80%', type: 'Multi Cap', nav: 450.20 }
+        ];
+
+        const iposData = [
+            { name: 'TechCorp Solutions IPO', dates: '18 Sep - 22 Sep', price: '₹450 - ₹475', lot: '32 Shares' },
+            { name: 'GreenEnergy Infra IPO', dates: '21 Sep - 25 Sep', price: '₹180 - ₹195', lot: '75 Shares' }
+        ];
+
+        const futuresData = [
+            { name: 'RELIANCE FUT', exp: '29 SEP 2026', price: 2855.00, change: '+1.5%' },
+            { name: 'SBIN FUT', exp: '29 SEP 2026', price: 988.70, change: '-0.27%' }
+        ];
+
+        const commoditiesData = [
+            { name: 'GOLD 24K MCX', exp: '05 OCT 2026', price: 74500.00, change: '+0.8%' },
+            { name: 'CRUDEOIL FUT', exp: '19 SEP 2026', price: 9757.00, change: '-1.2%' }
+        ];
+
+        const optionsData = [
+            { name: 'NIFTY 23300 CE', exp: '22 Sep 2026', price: 110.50, change: '+12.4%' },
+            { name: 'BANKNIFTY 56000 CE', exp: '24 Sep 2026', price: 340.00, change: '+25.8%' }
+        ];
+
+        const ideasData = [
+            { name: 'IRFC', desc: 'Railway Infrastructure', price: 79.27, change: '+0.34%' },
+            { name: 'GOLDBEES', desc: 'ETF Commodity', price: 124.43, change: '-0.38%' }
+        ];
+
+        // Initialize Live Chart using Chart.js
+        function initBrokerChart(stockName = 'RELIANCE', basePrice = 2840.50) {
+            const ctx = document.getElementById('brokerChart').getContext('2d');
+            
+            let labels = ['09:15', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '15:30'];
+            let dataPoints = [];
+            let current = basePrice * 0.98;
+            for(let i=0; i<labels.length; i++) {
+                current += (Math.random() - 0.48) * (basePrice * 0.008);
+                dataPoints.push(parseFloat(current.toFixed(2)));
+            }
+            dataPoints[dataPoints.length - 1] = basePrice;
+
+            if(brokerChartInstance) {
+                brokerChartInstance.destroy();
+            }
+
+            brokerChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: stockName + ' Price (₹)',
+                        data: dataPoints,
+                        borderColor: '#7c3aed',
+                        backgroundColor: 'rgba(124, 58, 237, 0.08)',
+                        borderWidth: 2.5,
+                        fill: true,
+                        tension: 0.35,
+                        pointRadius: 2,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+                        y: { grid: { color: '#f3f4f6' }, ticks: { font: { size: 10 } } }
+                    }
+                }
+            });
+        }
+
+        function loadStockOnChart(name, price, change) {
+            currentStock = { name, price, change };
+            document.getElementById('active-chart-title').innerText = name;
+            document.getElementById('active-chart-price').innerText = '₹' + price.toFixed(2);
+            document.getElementById('active-chart-change').innerText = change;
+            switchTab('chart');
+            initBrokerChart(name, price);
+        }
+
+        function renderStocks(filter = 'all') {
+            const container = document.getElementById('stocks-list');
+            container.innerHTML = '';
+            let filtered = stocksData;
+            if (filter === 'gainers') filtered = stocksData.filter(s => s.positive);
+            if (filter === 'losers') filtered = stocksData.filter(s => !s.positive);
+
+            filtered.forEach(stock => {
+                container.innerHTML += `
+                    <div class="p-4 flex justify-between items-center hover:bg-gray-50 transition">
+                        <div onclick="loadStockOnChart('${stock.name}', ${stock.price}, '${stock.change}')" class="cursor-pointer flex-1">
+                            <p class="font-bold text-gray-900 text-sm">${stock.name}</p>
+                            <span class="text-xs text-gray-500">${stock.desc}</span>
+                        </div>
+                        <div class="text-right flex items-center space-x-3">
+                            <div onclick="loadStockOnChart('${stock.name}', ${stock.price}, '${stock.change}')" class="cursor-pointer">
+                                <p class="font-bold text-gray-900 text-sm">₹${stock.price.toFixed(2)}</p>
+                                <span class="text-xs font-semibold ${stock.positive ? 'text-green-600' : 'text-red-600'}">${stock.change}</span>
+                            </div>
+                            <button onclick="openTradeModal('${stock.name}', ${stock.price})" class="bg-purple-700 text-white px-3 py-1 rounded text-xs font-bold">Trade</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function renderAllLists() {
+            renderStocks('all');
+            document.getElementById('mf-list').innerHTML = mfList.map(mf => `
+                <div class="p-3 border rounded-xl flex justify-between items-center">
+                    <div>
+                        <p class="font-bold text-sm">${mf.name}</p>
+                        <span class="text-xs text-gray-500">${mf.type} • Return: <strong class="text-green-600">${mf.return}</strong></span>
+                    </div>
+                    <button onclick="openTradeModal('${mf.name}', ${mf.nav})" class="bg-purple-700 text-white px-3 py-1 rounded text-xs font-semibold">Invest SIP</button>
+                </div>`).join('');
+
+            document.getElementById('ipo-list').innerHTML = iposData.map(ipo => `
+                <div class="p-4 border rounded-xl flex justify-between items-center">
+                    <div>
+                        <p class="font-bold text-sm">${ipo.name}</p>
+                        <p class="text-xs text-gray-500">${ipo.dates} • Price: ${ipo.price}</p>
+                    </div>
+                    <button onclick="alert('IPO Application submitted via UPI Mandate!')" class="bg-purple-700 text-white px-3 py-2 rounded-xl text-xs font-bold">Apply</button>
+                </div>`).join('');
+
+            document.getElementById('futures-list').innerHTML = futuresData.map(f => `
+                <div onclick="loadStockOnChart('${f.name}', ${f.price}, '${f.change}')" class="p-3 border rounded-xl flex justify-between items-center cursor-pointer hover:border-purple-600">
+                    <div><p class="font-bold text-sm">${f.name}</p><span class="text-xs text-gray-500">Exp: ${f.exp}</span></div>
+                    <div class="text-right"><p class="font-bold text-sm">₹${f.price}</p><span class="text-xs text-green-600">${f.change}</span></div>
+                </div>`).join('');
+
+            document.getElementById('commodities-list').innerHTML = commoditiesData.map(c => `
+                <div onclick="loadStockOnChart('${c.name}', ${c.price}, '${c.change}')" class="p-3 border rounded-xl flex justify-between items-center cursor-pointer hover:border-purple-600">
+                    <div><p class="font-bold text-sm">${c.name}</p><span class="text-xs text-gray-500">Exp: ${c.exp}</span></div>
+                    <div class="text-right"><p class="font-bold text-sm">₹${c.price}</p><span class="text-xs text-green-600">${c.change}</span></div>
+                </div>`).join('');
+
+            document.getElementById('options-list').innerHTML = optionsData.map(opt => `
+                <div onclick="loadStockOnChart('${opt.name}', ${opt.price}, '${opt.change}')" class="p-3 border rounded-xl flex justify-between items-center cursor-pointer hover:border-purple-600">
+                    <div><p class="font-bold text-sm">${opt.name}</p><span class="text-xs text-gray-500">Exp: ${opt.exp}</span></div>
+                    <div class="text-right"><p class="font-bold text-sm">₹${opt.price}</p><span class="text-xs text-red-600">${opt.change}</span></div>
+                </div>`).join('');
+
+            document.getElementById('ideas-grid').innerHTML = ideasData.map(item => `
+                <div onclick="loadStockOnChart('${item.name}', ${item.price}, '${item.change}')" class="p-3 border rounded-xl hover:border-purple-600 cursor-pointer flex justify-between items-center">
+                    <div><p class="font-bold text-sm">${item.name}</p><span class="text-xs text-gray-500">${item.desc}</span></div>
+                    <div class="text-right"><p class="font-bold text-sm">₹${item.price}</p><span class="text-xs text-green-600">${item.change}</span></div>
+                </div>`).join('');
+        }
+
+        function switchTab(tabId) {
+            ['chart', 'stocks', 'ideas', 'options', 'mf', 'ipo', 'futures', 'commodities'].forEach(t => {
+                document.getElementById('section-' + t).classList.add('hidden');
+                document.getElementById('tab-btn-' + t)?.classList.remove('border-purple-700', 'text-purple-700', 'font-semibold');
+            });
+            document.getElementById('section-' + tabId).classList.remove('hidden');
+            document.getElementById('tab-btn-' + tabId)?.classList.add('border-purple-700', 'text-purple-700', 'font-semibold');
+        }
+
+        function calculateSIP() {
+            const p = parseFloat(document.getElementById('sip-amt').value);
+            const i = parseFloat(document.getElementById('sip-rate').value) / 12 / 100;
+            const n = parseFloat(document.getElementById('sip-time').value) * 12;
+
+            document.getElementById('sip-amt-val').innerText = '₹' + p.toLocaleString('en-IN');
+            document.getElementById('sip-rate-val').innerText = document.getElementById('sip-rate').value + '%';
+            document.getElementById('sip-time-val').innerText = document.getElementById('sip-time').value + ' Years';
+
+            const invested = p * n;
+            const total = p * ((Math.pow(1 + i, n) - 1) / i) * (1 + i);
+            const returns = total - invested;
+
+            document.getElementById('res-invested').innerText = '₹' + Math.round(invested).toLocaleString('en-IN');
+            document.getElementById('res-returns').innerText = '₹' + Math.round(returns).toLocaleString('en-IN');
+            document.getElementById('res-total').innerText = '₹' + Math.round(total).toLocaleString('en-IN');
+        }
+
+        function openDematModal() { document.getElementById('demat-modal').classList.remove('hidden'); }
+        function closeDematModal() { document.getElementById('demat-modal').classList.add('hidden'); }
+        function sendDematOtp() {
+            if(document.getElementById('demat-phone').value.length < 10) { alert('Enter valid number'); return; }
+            document.getElementById('demat-step-1').classList.add('hidden');
+            document.getElementById('demat-step-2').classList.remove('hidden');
+            alert('OTP sent: 123456');
+        }
+        function verifyDematOtp() {
+            if(document.getElementById('demat-otp-input').value === '123456') {
+                alert('Demat Account successfully connected!');
+                closeDematModal();
+                document.getElementById('demat-banner').style.display = 'none';
+            } else { alert('Invalid OTP, use 123456'); }
+        }
+
+        function openTradeModal(name, price) {
+            currentStock.name = name; currentStock.price = price;
+            document.getElementById('trade-title').innerText = name;
+            document.getElementById('trade-price').innerText = '₹' + price.toFixed(2);
+            document.getElementById('trade-qty').value = 1;
+            calculateMargin();
+            document.getElementById('trade-modal').classList.remove('hidden');
+        }
+        function openTradeModalFromChart(action) {
+            tradeAction = action;
+            const btn = document.getElementById('trade-action-btn');
+            btn.innerText = action === 'BUY' ? 'Place Buy Order' : 'Place Sell Order';
+            btn.className = action === 'BUY' ? 'w-full bg-green-600 text-white py-3 rounded-xl font-bold text-sm hover:bg-green-700 transition' : 'w-full bg-red-600 text-white py-3 rounded-xl font-bold text-sm hover:bg-red-700 transition';
+            openTradeModal(currentStock.name, currentStock.price);
+        }
+        function closeTradeModal() { document.getElementById('trade-modal').classList.add('hidden'); }
+        function setOrderType(type) {
+            orderType = type;
+            document.getElementById('btn-cnc').className = type === 'CNC' ? 'flex-1 py-2 rounded-xl text-xs font-bold bg-purple-700 text-white' : 'flex-1 py-2 rounded-xl text-xs font-bold bg-gray-100 text-gray-700';
+            document.getElementById('btn-mis').className = type === 'MIS' ? 'flex-1 py-2 rounded-xl text-xs font-bold bg-purple-700 text-white' : 'flex-1 py-2 rounded-xl text-xs font-bold bg-gray-100 text-gray-700';
+            calculateMargin();
+        }
+        function calculateMargin() {
+            const qty = parseInt(document.getElementById('trade-qty').value) || 1;
+            let margin = currentStock.price * qty;
+            if(orderType === 'MIS') margin = margin / 5;
+            document.getElementById('trade-margin').innerText = '₹' + margin.toLocaleString('en-IN', {maximumFractionDigits: 2});
+        }
+        function executeTrade() {
+            const qty = parseInt(document.getElementById('trade-qty').value) || 1;
+            let cost = currentStock.price * qty;
+            if(orderType === 'MIS') cost = cost / 5;
+            if(walletBalance < cost) { alert('Insufficient wallet balance!'); return; }
+            walletBalance -= cost;
+            document.getElementById('wallet-badge').innerText = '₹' + Math.round(walletBalance).toLocaleString('en-IN');
+            alert(`Order executed successfully for ${qty}x ${currentStock.name}!`);
+            closeTradeModal();
+        }
+
+        function openWalletModal() { document.getElementById('wallet-modal').classList.remove('hidden'); }
+        function closeWalletModal() { document.getElementById('wallet-modal').classList.add('hidden'); }
+        function addFunds() {
+            const amt = parseFloat(document.getElementById('add-fund-amt').value) || 0;
+            walletBalance += amt;
+            document.getElementById('wallet-balance-display').innerText = '₹' + walletBalance.toLocaleString('en-IN');
+            document.getElementById('wallet-badge').innerText = '₹' + Math.round(walletBalance).toLocaleString('en-IN');
+            alert(`Successfully added ₹${amt}!`);
+            closeWalletModal();
+        }
+
+        function filterStocks(type) { renderStocks(type); }
+        function updateChartTimeframe(tf) { alert('Loaded timeframe: ' + tf); }
+        function loadOptionChain(val) { alert('Opening option chain for ' + val); }
+        function handleSearch(q) {
+            const filtered = stocksData.filter(s => s.name.toLowerCase().includes(q.toLowerCase()));
+            const container = document.getElementById('stocks-list');
+            container.innerHTML = filtered.map(stock => `
+                <div class="p-4 flex justify-between items-center hover:bg-gray-50 transition">
+                    <div onclick="loadStockOnChart('${stock.name}', ${stock.price}, '${stock.change}')" class="cursor-pointer flex-1">
+                        <p class="font-bold text-gray-900 text-sm">${stock.name}</p><span class="text-xs text-gray-500">${stock.desc}</span>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-bold text-gray-900 text-sm">₹${stock.price.toFixed(2)}</p>
+                        <span class="text-xs font-semibold ${stock.positive ? 'text-green-600' : 'text-red-600'}">${stock.change}</span>
+                    </div>
+                </div>`).join('');
+        }
+
+        setInterval(() => {
+            let changeVal = (Math.random() - 0.49) * 2;
+            let currentNifty = 23270.60 + changeVal;
+            document.getElementById('ticker-nifty').innerText = currentNifty.toFixed(2);
+        }, 3000);
+
+        window.onload = function() {
+            renderAllLists();
+            initBrokerChart('RELIANCE', 2840.50);
+            calculateSIP();
+        };
+    </script>
+</body>
+</html>
